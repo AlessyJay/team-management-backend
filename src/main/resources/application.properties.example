@@ -1,10 +1,23 @@
 spring.application.name=team_management_backend
+
+# App datasource (pooler - for normal queries)
 spring.datasource.url=jdbc:postgresql://YOUR_HOST/YOUR_DB?user=YOUR_USER&password=YOUR_PASSWORD&sslmode=require&channelBinding=require
 spring.datasource.username=YOUR_USER
 spring.datasource.password=YOUR_PASSWORD
 spring.datasource.driver-class-name=org.postgresql.Driver
 
+# Hibernate
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+spring.jpa.show-sql=false
 spring.jpa.properties.hibernate.format_sql=true
-JWT_SECRET=ThisIsMySuperDuperLongJWTSecretThatICanThinkOfRightNowAndICanGuaranteeYouThatYouCannotBeGuessingItForSure!!
+
+# JWT
+app.jwt.secret=ThisIsMySuperDuperLongJWTSecretThatICanThinkOfRightNowAndICanGuaranteeYouThatYouCannotBeGuessingItForSure!!
+app.jwt.access-expiration-ms=120000 <- This will only last for 2 minutes
+app.jwt.refresh-expiration-ms=15552000000 <- The refresh token will last for 6 months
+
+spring.flyway.enabled=true
+spring.flyway.locations=classpath:db/migration
+
+server.error.include-message=always
+server.error.include-binding-errors=always

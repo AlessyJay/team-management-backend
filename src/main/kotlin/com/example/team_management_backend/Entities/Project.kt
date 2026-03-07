@@ -1,12 +1,8 @@
 package com.example.team_management_backend.Entities
 
+import com.example.team_management_backend.common.ProjectStatus
 import jakarta.persistence.*
 import java.time.OffsetDateTime
-
-enum class STATUS {
-    ACTIVE,
-    ARCHIVED
-}
 
 @Entity
 @Table(name = "projects")
@@ -15,13 +11,13 @@ data class Projects(
 
     @Column(nullable = false) var name: String,
 
-    @Column(nullable = true) var description: String,
+    @Column(nullable = true) var description: String? = null,
 
     @OneToOne
     @JoinColumn(name = "owner_id", nullable = false, unique = true)
     var owner: User,
 
-    @Enumerated(EnumType.STRING) @Column(nullable = false) var status: STATUS = STATUS.ACTIVE,
+    @Enumerated(EnumType.STRING) @Column(nullable = false) var status: ProjectStatus = ProjectStatus.ACTIVE,
 
     @Column(nullable = false) var createdAt: OffsetDateTime = OffsetDateTime.now(),
 

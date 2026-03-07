@@ -1,28 +1,10 @@
 package com.example.team_management_backend.Entities
 
+import com.example.team_management_backend.common.IssuePriority
+import com.example.team_management_backend.common.IssueStatus
+import com.example.team_management_backend.common.IssueType
 import jakarta.persistence.*
 import java.time.OffsetDateTime
-
-enum class IssueStatus {
-    BACKLOG,
-    TODO,
-    IN_PROGRESS,
-    IN_REVIEW,
-    DONE
-}
-
-enum class IssueType {
-    STORY,
-    TASK,
-    BUG
-}
-
-enum class IssuePriority {
-    LOW,
-    MEDIUM,
-    HIGH,
-    CRITICAL
-}
 
 @Entity
 @Table(
@@ -47,6 +29,10 @@ data class Issues(
 
     @Column(columnDefinition = "TEXT")
     var description: String? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigneeId")
+    var assignee: User? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

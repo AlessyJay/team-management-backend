@@ -2,13 +2,14 @@ package com.example.team_management_backend.Entities
 
 import jakarta.persistence.*
 import java.time.OffsetDateTime
+import java.util.*
 
 @Entity
 @Table(name = "users")
 data class User(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    var id: String? = null,
+    var id: UUID,
 
     @Column(nullable = false, length = 100)
     var name: String,

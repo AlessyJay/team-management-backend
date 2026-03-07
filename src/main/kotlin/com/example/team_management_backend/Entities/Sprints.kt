@@ -1,16 +1,9 @@
 package com.example.team_management_backend.Entities
 
+import com.example.team_management_backend.common.SprintStatus
 import jakarta.persistence.*
 import java.time.LocalDate
 import java.time.OffsetDateTime
-
-enum class SprintStatus {
-    PLANNING,
-    ACTIVE,
-    COMPLETED,
-    CLOSED,
-    CANCELLED,
-}
 
 @Entity
 @Table(name = "sprints")
