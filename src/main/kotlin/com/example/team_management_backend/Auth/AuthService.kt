@@ -13,26 +13,34 @@ import java.util.*
 
 @Service
 class AuthService(
-    private val db: JdbcClient, private val passwordEncoder: PasswordEncoder, private val jwtProvider: JwtProvider
+    private val db: JdbcClient,
+    private val passwordEncoder: PasswordEncoder,
+    private val jwtProvider: JwtProvider
 ) {
+
     fun register(req: RegisterRequest): RegisterResponse {
-        val exists =
-            db.sql("select count(*) from users where email = :email").param("email", req.email).query(Int::class.java)
-                .single() > 0
+        val exists = db.sql("SELECT COUNT(*) FROM users WHERE email = :email")
+            .param("email", req.email)
+            .query(Int::class.java).single() > 0
 
         if (exists) throw ConflictException("Email already exists!")
 
         val userId = UUID.randomUUID()
 
-        db.sql("insert into users (id, name, email, password, created_at) values (:id, :name, :email, :password, :created_at)")
-            .param("id", userId).param("name", req.name).param("email", req.email)
-            .param("password", passwordEncoder.encode(req.password)).param("created_at", LocalDateTime.now()).update()
+        db.sql("INSERT INTO users (id, name, email, password) VALUES (:id, :name, :email, :password)")
+            .param("id", userId)
+            .param("name", req.name)
+            .param("email", req.email)
+            .param("password", passwordEncoder.encode(req.password))
+            .update()
 
         return RegisterResponse("Account created successfully!", userId, req.email)
     }
 
+    // Returns the LoginResponse (for the body) and the raw refresh token
+    // (for the controller to set as an HttpOnly cookie, never in the body).
     fun login(req: LoginRequest): Pair<LoginResponse, String> {
-        val row = db.sql("select id, email, password from users where email = :email")
+        val row = db.sql("SELECT id, email, password FROM users WHERE email = :email")
             .param("email", req.email)
             .query { rs, _ ->
                 Triple(
@@ -48,20 +56,20 @@ class AuthService(
             throw NotFoundException("Invalid credentials!")
 
         val userId = row.first
-        print(userId)
         val email = row.second
 
         val accessToken = jwtProvider.generateAccessToken(userId, email)
         val refreshToken = jwtProvider.generateRefreshToken(userId)
         val tokenHash = jwtProvider.hashToken(refreshToken)
-        val expiresAt = LocalDateTime.now().plusNanos(jwtProvider.getRefreshExpirationMs() * 1_000_000)
+        val expiresAt = OffsetDateTime.now().plusNanos(jwtProvider.getRefreshExpirationMs() * 1_000_000)
 
+        // One refresh token per user, upserts on every login.
         db.sql(
             """
-            insert into refresh_tokens (id, user_id, token_hash, expires_at, created_at)
-            values (:id, :userId, :tokenHash, :expiresAt, :created_at)
-            on conflict (user_id)
-            do update set token_hash = :tokenHash, expires_at = :expiresAt, created_at = now()
+            INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at)
+            VALUES (:id, :userId, :tokenHash, :expiresAt, :created_at)
+            ON CONFLICT (user_id)
+            DO UPDATE SET token_hash = :tokenHash, expires_at = :expiresAt, created_at = now()
         """
         )
             .param("id", UUID.randomUUID())
@@ -83,8 +91,7 @@ class AuthService(
 
         val record = db.sql(
             """
-            select token_hash, expires_at from refresh_tokens
-            where user_id = :userId
+            SELECT token_hash, expires_at FROM refresh_tokens WHERE user_id = :userId
         """
         )
             .param("userId", userId)
@@ -94,13 +101,14 @@ class AuthService(
             .optional()
             .orElseThrow { UnauthorizedException("Refresh token not found") }
 
+        // Constant-time comparison to prevent timing attacks
         if (!MessageDigest.isEqual(record.first.toByteArray(), tokenHash.toByteArray()))
             throw UnauthorizedException("Refresh token mismatch")
 
         if (record.second.isBefore(OffsetDateTime.now()))
             throw UnauthorizedException("Refresh token expired")
 
-        val email = db.sql("select email from users where id = :id")
+        val email = db.sql("SELECT email FROM users WHERE id = :id")
             .param("id", userId)
             .query(String::class.java).single()
 
@@ -108,7 +116,7 @@ class AuthService(
     }
 
     fun logout(userId: UUID) {
-        db.sql("delete from refresh_tokens where user_id = :userId")
+        db.sql("DELETE FROM refresh_tokens WHERE user_id = :userId")
             .param("userId", userId)
             .update()
     }

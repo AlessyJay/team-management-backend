@@ -14,16 +14,18 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/auth")
 class AuthController(private val service: AuthService) {
+
     @PostMapping("/register")
-    fun register(@Valid @RequestBody req: RegisterRequest) = service.register(req)
+    fun register(@Valid @RequestBody req: RegisterRequest): ResponseEntity<RegisterResponse> =
+        ResponseEntity.ok(service.register(req))
 
     @PostMapping("/login")
     fun login(
         @Valid @RequestBody req: LoginRequest,
         res: HttpServletResponse
     ): ResponseEntity<LoginResponse> {
-        val (loginResponse, refreshToken) = service.login(req)
-        setRefreshTokenCookie(res, refreshToken)
+        val (loginResponse, rawRefreshToken) = service.login(req)
+        setRefreshTokenCookie(res, rawRefreshToken)
         return ResponseEntity.ok(loginResponse)
     }
 
@@ -52,7 +54,7 @@ class AuthController(private val service: AuthService) {
     private fun setRefreshTokenCookie(res: HttpServletResponse, token: String) {
         val cookie = Cookie("refresh_token", token).apply {
             isHttpOnly = true
-            secure = true
+            secure = false
             path = "/api/auth"
             maxAge = 60 * 60 * 24 * 180
         }
@@ -60,7 +62,7 @@ class AuthController(private val service: AuthService) {
 
         val cookieHeader = res.getHeaders("Set-Cookie")
             .lastOrNull()
-            ?.let { "$it; SameSite=Strict" }
+            ?.let { "$it; SameSite=Lax" }
         if (cookieHeader != null) {
             res.setHeader("Set-Cookie", cookieHeader)
         }
@@ -69,7 +71,7 @@ class AuthController(private val service: AuthService) {
     private fun clearRefreshTokenCookie(res: HttpServletResponse) {
         val cookie = Cookie("refresh_token", "").apply {
             isHttpOnly = true
-            secure = true
+            secure = false
             path = "/api/auth"
             maxAge = 0
         }
