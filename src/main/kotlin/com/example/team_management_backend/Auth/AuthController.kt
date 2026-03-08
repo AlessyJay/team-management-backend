@@ -18,7 +18,14 @@ class AuthController(private val service: AuthService) {
     fun register(@Valid @RequestBody req: RegisterRequest) = service.register(req)
 
     @PostMapping("/login")
-    fun login(@Valid @RequestBody req: LoginRequest) = service.login(req)
+    fun login(
+        @Valid @RequestBody req: LoginRequest,
+        res: HttpServletResponse
+    ): ResponseEntity<LoginResponse> {
+        val (loginResponse, refreshToken) = service.login(req)
+        setRefreshTokenCookie(res, refreshToken)
+        return ResponseEntity.ok(loginResponse)
+    }
 
     @PostMapping("/refresh")
     fun refresh(
