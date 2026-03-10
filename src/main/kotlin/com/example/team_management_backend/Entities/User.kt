@@ -7,8 +7,7 @@ import java.util.*
 @Entity
 @Table(name = "users")
 data class User(
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Id @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID,
 
     @Column(nullable = false, length = 100)
@@ -20,6 +19,9 @@ data class User(
     @Column(nullable = false, columnDefinition = "TEXT")
     var password: String,
 
+    @Column(name = "avatar_url")
+    var avatarUrl: String? = null,
+
     @Column(name = "created_at", nullable = false)
-    var joinedAt: OffsetDateTime = OffsetDateTime.now()
+    var createdAt: OffsetDateTime = OffsetDateTime.now()
 )

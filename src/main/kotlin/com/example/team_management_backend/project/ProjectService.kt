@@ -9,7 +9,10 @@ import java.util.*
 
 @Service
 class ProjectService(val repo: ProjectRepository) {
+
     fun listProjects(userId: UUID) = repo.findAllForUser(userId)
+
+    fun getRecentlyViewed(userId: UUID) = repo.findRecentlyViewed(userId)
 
     fun getProject(id: UUID, userId: UUID): ProjectDto {
         val project = repo.findById(id) ?: throw NotFoundException("Project not found")
@@ -21,18 +24,22 @@ class ProjectService(val repo: ProjectRepository) {
         val project = repo.create(req.name, req.description, ownerId)
         repo.db.sql(
             """
-            INSERT INTO project_members (id, project_id, user_id, role, created_at, updated_at)
-            VALUES (:id, :pid, :uid, 'MANAGER', :created_at, :updated_at)
-        """
+            INSERT INTO project_members (id, project_id, user_id, role, joined_at, updated_at)
+            VALUES (:id, :pid, :uid, 'MANAGER', :joined_at, :updated_at)
+            """
         )
             .param("id", UUID.randomUUID())
-            .param("pid", project.id)
-            .param("uid", ownerId)
-            .param("created_at", LocalDateTime.now())
+            .param("pid", project.id.toString())
+            .param("uid", ownerId.toString())
+            .param("joined_at", LocalDateTime.now())
             .param("updated_at", LocalDateTime.now())
             .update()
-
         return project
+    }
+
+    fun recordView(projectId: UUID, userId: UUID) {
+        if (!repo.isMember(projectId, userId)) return
+        repo.upsertView(projectId, userId)
     }
 
     fun updateProject(id: UUID, req: UpdateProjectRequest, userId: UUID): ProjectDto {
@@ -47,7 +54,8 @@ class ProjectService(val repo: ProjectRepository) {
     }
 
     fun requireManager(projectId: UUID, userId: UUID) {
-        val role = repo.getRole(projectId, userId) ?: throw ForbiddenException("Not a member of this project")
+        val role = repo.getRole(projectId, userId)
+            ?: throw ForbiddenException("Not a member of this project")
         if (role != MemberRole.MANAGER) throw ForbiddenException("Manager role required")
     }
 

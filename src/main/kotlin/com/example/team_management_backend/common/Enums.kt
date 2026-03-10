@@ -1,6 +1,6 @@
 package com.example.team_management_backend.common
 
-enum class ProjectStatus { ACTIVE, ARCHIVED }
+enum class ProjectStatus { ACTIVE, INACTIVE, ARCHIVED }
 
 enum class MemberRole { MANAGER, MEMBER }
 

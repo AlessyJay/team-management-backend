@@ -1,30 +1,28 @@
 package com.example.team_management_backend.Entities
 
-import com.example.team_management_backend.common.ProjectStatus
 import jakarta.persistence.*
 import java.time.OffsetDateTime
 
 @Entity
-@Table(name = "projects")
-data class Projects(
+@Table(
+    name = "issue_comments",
+    indexes = [Index(name = "idx_comments_issue", columnList = "issue_id")]
+)
+data class IssueComment(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(nullable = false, unique = true)
     var id: String = "",
 
-    @Column(nullable = false)
-    var name: String = "",
-
-    @Column(nullable = true, columnDefinition = "TEXT")
-    var description: String? = null,
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "issue_id", nullable = false)
+    var issue: Issues,
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "owner_id", nullable = false)
-    var owner: User,
+    @JoinColumn(name = "user_id", nullable = false)
+    var user: User,
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    var status: ProjectStatus = ProjectStatus.ACTIVE,
+    @Column(nullable = false, columnDefinition = "TEXT")
+    var content: String = "",
 
     @Column(name = "created_at", nullable = false)
     var createdAt: OffsetDateTime = OffsetDateTime.now(),

@@ -5,15 +5,28 @@ import jakarta.persistence.*
 import java.time.OffsetDateTime
 
 @Entity
-@Table(name = "project_members", uniqueConstraints = [UniqueConstraint(columnNames = ["projectId", "userId"])])
+@Table(
+    name = "project_members",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["project_id", "user_id"])]
+)
 data class ProjectMember(
     @Id @GeneratedValue(strategy = GenerationType.UUID) var id: String,
-    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(
-        name = "projectId",
-        nullable = false
-    ) var project: Projects,
-    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(nullable = false, name = "userId") var user: User,
-    @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) var role: MemberRole = MemberRole.MEMBER,
-    @Column(name = "joinedAt", nullable = false) var joinedAt: OffsetDateTime = OffsetDateTime.now(),
-    @Column(name = "updatedAt", nullable = false) var updatedAt: OffsetDateTime = OffsetDateTime.now(),
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "project_id", nullable = false)
+    var project: Projects,
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    var user: User,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    var role: MemberRole = MemberRole.MEMBER,
+
+    @Column(name = "joined_at", nullable = false)
+    var joinedAt: OffsetDateTime = OffsetDateTime.now(),
+
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: OffsetDateTime = OffsetDateTime.now(),
 )
