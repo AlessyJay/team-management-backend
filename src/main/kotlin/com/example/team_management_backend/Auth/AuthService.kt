@@ -27,11 +27,12 @@ class AuthService(
 
         val userId = UUID.randomUUID()
 
-        db.sql("INSERT INTO users (id, name, email, password) VALUES (:id, :name, :email, :password)")
+        db.sql("INSERT INTO users (id, name, email, password, created_at) VALUES (:id, :name, :email, :password, :created_at)")
             .param("id", userId)
             .param("name", req.name)
             .param("email", req.email)
             .param("password", passwordEncoder.encode(req.password))
+            .param("created_at", LocalDateTime.now())
             .update()
 
         return RegisterResponse("Account created successfully!", userId, req.email)

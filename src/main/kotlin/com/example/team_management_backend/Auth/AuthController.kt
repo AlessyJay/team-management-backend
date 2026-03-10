@@ -32,7 +32,6 @@ class AuthController(private val service: AuthService) {
     @PostMapping("/refresh")
     fun refresh(
         request: HttpServletRequest,
-        res: HttpServletResponse
     ): ResponseEntity<RefreshResponse> {
         val rawRefreshToken = extractRefreshTokenCookie(request)
             ?: return ResponseEntity.status(401).build()
@@ -52,10 +51,14 @@ class AuthController(private val service: AuthService) {
     }
 
     private fun setRefreshTokenCookie(res: HttpServletResponse, token: String) {
+        // Use path="/" so there is never a more-specific duplicate competing
+        // with the Next.js-reissued cookie. Next.js re-sets this with path="/"
+        // anyway, but keeping both consistent avoids ordering ambiguity in
+        // environments where the browser talks to Spring directly.
         val cookie = Cookie("refresh_token", token).apply {
             isHttpOnly = true
-            secure = false
-            path = "/api/auth"
+            secure = false  // set true in production
+            path = "/"
             maxAge = 60 * 60 * 24 * 180
         }
         res.addCookie(cookie)
@@ -72,7 +75,7 @@ class AuthController(private val service: AuthService) {
         val cookie = Cookie("refresh_token", "").apply {
             isHttpOnly = true
             secure = false
-            path = "/api/auth"
+            path = "/"
             maxAge = 0
         }
         res.addCookie(cookie)
