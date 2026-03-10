@@ -148,9 +148,7 @@ POST /api/projects
 **Update project**
 
 ```json
-PATCH /api/projects/{
-  id
-}
+PATCH /api/projects/{id}
 {
   "name": "Renamed Project",
   "status": "ARCHIVED"
@@ -172,9 +170,7 @@ Project statuses: `ACTIVE`, `ARCHIVED`
 **Add member**
 
 ```json
-POST /api/projects/{
-  projectId
-}/members
+POST /api/projects/{projectId}/members
 {
   "userId": "<uuid>",
   "role": "MEMBER"
@@ -198,9 +194,7 @@ Member roles: `MANAGER`, `MEMBER`
 **Create sprint**
 
 ```json
-POST /api/projects/{
-  projectId
-}/sprints
+POST /api/projects/{projectId}/sprints
 {
   "name": "Sprint 1",
   "goal": "Ship the auth flow",
@@ -227,9 +221,7 @@ Sprint statuses: `PLANNING`, `ACTIVE`, `COMPLETED`
 **Create issue**
 
 ```json
-POST /api/projects/{
-  projectId
-}/issues
+POST /api/projects/{projectId}/issues
 {
   "title": "Fix login redirect loop",
   "description": "Users are being redirected in a loop after login on Safari",
@@ -243,11 +235,7 @@ POST /api/projects/{
 **Assign issue**
 
 ```json
-PATCH /api/projects/{
-  projectId
-}/issues/{
-  issueId
-}/assign
+PATCH /api/projects/{projectId}/issues/{issueId}/assign
 {
   "assigneeId": "<uuid>"
 }
@@ -258,11 +246,7 @@ Pass `null` for `assigneeId` to unassign.
 **Move to sprint**
 
 ```json
-PATCH /api/projects/{
-  projectId
-}/issues/{
-  issueId
-}/move
+PATCH /api/projects/{projectId}/issues/{issueId}/move
 {
   "sprintId": "<uuid>"
 }
@@ -288,13 +272,7 @@ Issue priorities: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
 **Set capacity**
 
 ```json
-PUT /api/projects/{
-  projectId
-}/sprints/{
-  sprintId
-}/capacity/{
-  userId
-}
+PUT /api/projects/{projectId}/sprints/{sprintId}/capacity/{userId}
 {
   "capacity": 40
 }
