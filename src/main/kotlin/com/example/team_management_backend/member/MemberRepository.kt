@@ -29,7 +29,8 @@ class MemberRepository(val db: JdbcClient) {
             WHERE pm.project_id = :projectId
             ORDER BY pm.joined_at ASC
             """
-        ).param("projectId", projectId).query(rowMapper()).list()
+        ).param("projectId", projectId.toString())          // raw UUID → toString()
+            .query(rowMapper()).list()
 
     fun add(projectId: UUID, userId: UUID, role: MemberRole): ProjectMember =
         db.sql(
@@ -40,12 +41,17 @@ class MemberRepository(val db: JdbcClient) {
                 (SELECT email FROM users WHERE id = :uid) AS email,
                 (SELECT name  FROM users WHERE id = :uid) AS name
             """
-        ).param("pid", projectId).param("uid", userId).param("role", role.name)
+        )
+            .param("pid", projectId.toString())
+            .param("uid", userId.toString())
+            .param("role", role.name)
             .query(rowMapper()).single()
 
     fun remove(projectId: UUID, userId: UUID): Int =
         db.sql("DELETE FROM project_members WHERE project_id = :pid AND user_id = :uid")
-            .param("pid", projectId).param("uid", userId).update()
+            .param("pid", projectId.toString())
+            .param("uid", userId.toString())
+            .update()
 
     fun findUserByEmail(email: String): UUID? =
         db.sql("SELECT id FROM users WHERE email = :email")

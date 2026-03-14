@@ -4,7 +4,7 @@ enum class ProjectStatus { ACTIVE, INACTIVE, ARCHIVED }
 
 enum class MemberRole { MANAGER, MEMBER }
 
-enum class SprintStatus { PLANNING, ACTIVE, COMPLETED }
+enum class SprintStatus { PLANNING, ACTIVE, REVIEWING, REVIEWED, COMPLETED, CLOSED }
 
 enum class IssueType { STORY, TASK, BUG }
 

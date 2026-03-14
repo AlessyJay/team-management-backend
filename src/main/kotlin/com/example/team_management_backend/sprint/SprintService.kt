@@ -1,9 +1,6 @@
 package com.example.team_management_backend.sprint
 
-import com.example.team_management_backend.common.BadRequestException
-import com.example.team_management_backend.common.ConflictException
-import com.example.team_management_backend.common.NotFoundException
-import com.example.team_management_backend.common.SprintStatus
+import com.example.team_management_backend.common.*
 import com.example.team_management_backend.project.ProjectService
 import org.springframework.stereotype.Service
 import java.util.*
@@ -11,23 +8,55 @@ import java.util.*
 @Service
 class SprintService(
     private val repo: SprintRepository,
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
 ) {
     fun listSprints(projectId: UUID, userId: UUID): List<Sprint> {
         projectService.requireMember(projectId, userId)
         return repo.findAll(projectId)
     }
 
+    fun getSprint(projectId: UUID, sprintId: UUID, userId: UUID): Sprint {
+        projectService.requireMember(projectId, userId)
+        return repo.findById(sprintId) ?: throw NotFoundException("Sprint not found")
+    }
+
     fun createSprint(projectId: UUID, req: CreateSprintRequest, userId: UUID): Sprint {
         projectService.requireManager(projectId, userId)
-        if (req.endDate <= req.startDate) throw BadRequestException("End date must be after start date")
+        if (req.expectedDuration == null && req.startDate == null)
+            throw BadRequestException("Provide either expectedDuration or startDate")
+        if (req.startDate != null && req.endDate != null && req.endDate <= req.startDate)
+            throw BadRequestException("End date must be after start date")
+        if (req.leadIds.size > 2) throw BadRequestException("Maximum 2 leads per sprint")
         return repo.create(projectId, req)
     }
 
     fun updateSprint(projectId: UUID, sprintId: UUID, req: UpdateSprintRequest, userId: UUID): Sprint {
         projectService.requireManager(projectId, userId)
         repo.findById(sprintId) ?: throw NotFoundException("Sprint not found")
+        if (req.startDate != null && req.endDate != null && req.endDate <= req.startDate)
+            throw BadRequestException("End date must be after start date")
         return repo.update(sprintId, req)
+    }
+
+    fun updateGoal(projectId: UUID, sprintId: UUID, req: UpdateGoalRequest, userId: UUID): Sprint {
+        val sprint = repo.findById(sprintId) ?: throw NotFoundException("Sprint not found")
+        val isLead = sprint.leads.any { it.userId == userId }
+        val isManager = !isLead && run {
+            try {
+                projectService.requireManager(projectId, userId); true
+            } catch (_: ForbiddenException) {
+                false
+            }
+        }
+        if (!isLead && !isManager) throw ForbiddenException("Only sprint leads or project managers can update the description")
+        return repo.updateGoal(sprintId, req.goal)
+    }
+
+    fun deleteSprint(projectId: UUID, sprintId: UUID, userId: UUID) {
+        projectService.requireManager(projectId, userId)
+        val sprint = repo.findById(sprintId) ?: throw NotFoundException("Sprint not found")
+        if (sprint.status == SprintStatus.ACTIVE) throw BadRequestException("Cannot delete an active sprint")
+        repo.delete(sprintId)
     }
 
     fun startSprint(projectId: UUID, sprintId: UUID, userId: UUID): Sprint {

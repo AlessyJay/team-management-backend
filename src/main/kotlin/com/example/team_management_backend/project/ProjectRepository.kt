@@ -150,9 +150,12 @@ class ProjectRepository(val db: JdbcClient) {
 
     fun upsertView(projectId: UUID, userId: UUID) = db.sql(
         """
-        INSERT INTO project_views (user_id, project_id, viewed_at)
-        VALUES (:uid, :pid, now())
+        INSERT INTO project_views (id, user_id, project_id, viewed_at)
+        VALUES (:id, :uid, :pid, now())
         ON CONFLICT (user_id, project_id) DO UPDATE SET viewed_at = now()
         """
-    ).param("uid", userId.toString()).param("pid", projectId.toString()).update()
+    )
+        .param("id", UUID.randomUUID())
+        .param("uid", userId.toString())
+        .param("pid", projectId.toString()).update()
 }
